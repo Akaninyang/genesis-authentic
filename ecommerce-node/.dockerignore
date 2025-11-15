@@ -1,0 +1,36 @@
+# Ignore Git and VCS stuff
+.git
+.gitignore
+
+# Build outputs
+target
+**/target
+
+# Node / JS build files
+node_modules
+**/node_modules
+dist
+build
+
+# OS / editor junk
+.DS_Store
+*.swp
+*.log
+*.tmp
+
+# Cache and temp
+*.cache
+.cache
+.env
+.env.*
+*.pid
+
+# IDE folders
+.vscode
+.idea
+
+# Docs and extras
+/tests
+/examples
+*.md
+LICENSE
