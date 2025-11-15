@@ -1,9 +1,9 @@
-# **Genesis Authentic Marketplace 🚀  **
+# **Genesis Authentic Marketplace 🚀**
 Tagline: "Don’t just trust. Own the truth."
 
 This repo contains the folders for an *E-commerce Marketplace* standalone blockchain built with the polkadot sdk along with a frontend client which is a vercel hosted ecommerce webapp - Genesis marketplace. The extrinsics of the custom blockchain can be called both from polkadot.js.org/apps and from the frontend client included here. The custom chain has a custom pallet - "marketplace" that exposes extrinsics.
 
-[![Github Public Repo Link](https://github.com/Akaninyang/E-commerce-Custom-Blockchain-and-Client)]
+[![Github Public Repo Link](https://github.com/Akaninyang/genesis-authentic)]
 [![Live Frontend Demo Link](https://)]
 [![Blockchain](wss://genesis-authentic.onrender.com)This can be used to test the chain extrinsics on(https://polkadot.js.org/apps)]
 [![Demo Video Link](https://)]
@@ -65,17 +65,16 @@ Objectives:
 
 ```bash
 ## Clone the Repo and Run the Node Locally
-git clone https://github.com/Akaninyang/E-commerce-Custom-Blockchain-and-Client
+git clone https://github.com/Akaninyang/genesis-authentic
 cd ecommerce-node
 cargo build --release
 ./target/release/ecommerce-chain-node --dev
 
 #Build and Interact with the chain locally using
-#[Polkadot-Substrate-Portal](https://polkadot.js.org/apps/#/explorer?rpc=ws://localhost:9944)
-// Alice is set as the sudo account, so use Alice to set admin or transfer funds to your wallet for testing if you wish to interact with the chain from the frontend using a test wallet you own
+#(https://polkadot.js.org/apps/#/explorer?rpc=ws://localhost:9944)
+#Alice is set as the sudo account, so use Alice to set admin or transfer funds to your wallet for testing if you wish to interact with the chain from the frontend using a test wallet you own
 
 ## Frontend Setup For Local Dev
-##Run in another terminal
 cd genesis-marketplace
 npm install
 npm run dev
