@@ -3,10 +3,10 @@ Tagline: "Don’t just trust. Own the truth."
 
 This repo contains the folders for an *E-commerce Marketplace* standalone blockchain built with the polkadot sdk along with a frontend client which is a vercel hosted ecommerce webapp - Genesis marketplace. The extrinsics of the custom blockchain can be called both from polkadot.js.org/apps and from the frontend client included here. The custom chain has a custom pallet - "marketplace" that exposes extrinsics. A prefunded test account *Bob* is provided that automatically transactions without credentials if you don't have a connected wallet. 
 
-[![Github Public Repo Link](https://github.com/Akaninyang/genesis-authentic)]
-[![Live Frontend Demo Link](https://genesis-authentic.vercel.app/)]
-[![Blockchain](wss://genesis-authentic.onrender.com)This can be used with(https://polkadot.js.org/apps)]
-[![Demo Video Link](https://)]
+- [![Github Public Repo Link](https://github.com/Akaninyang/genesis-authentic)]
+- [![Live Frontend Demo Link](https://genesis-authentic.vercel.app/)]
+- [![Node Web Socket](wss://genesis-authentic.onrender.com)This can be used with(https://polkadot.js.org/apps)]
+- [![Demo Video Link](https://)]
 
 ## **Project Overview 🔥**
 
