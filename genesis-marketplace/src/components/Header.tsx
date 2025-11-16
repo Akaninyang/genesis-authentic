@@ -1,4 +1,3 @@
-//import React from 'react'
 export default function Header({ onNavigate, lockerCount } : { onNavigate: (r:'home'|'locker')=>void, lockerCount:number}) {
   return (
     <header className="flex items-center justify-between py-6 p-6">

@@ -1,11 +1,11 @@
 # **Genesis Authentic Marketplace 🚀**
 Tagline: "Don’t just trust. Own the truth."
 
-This repo contains the folders for an *E-commerce Marketplace* standalone blockchain built with the polkadot sdk along with a frontend client which is a vercel hosted ecommerce webapp - Genesis marketplace. The extrinsics of the custom blockchain can be called both from polkadot.js.org/apps and from the frontend client included here. The custom chain has a custom pallet - "marketplace" that exposes extrinsics.
+This repo contains the folders for an *E-commerce Marketplace* standalone blockchain built with the polkadot sdk along with a frontend client which is a vercel hosted ecommerce webapp - Genesis marketplace. The extrinsics of the custom blockchain can be called both from polkadot.js.org/apps and from the frontend client included here. The custom chain has a custom pallet - "marketplace" that exposes extrinsics. A prefunded test account *Bob* is provided that automatically transactions without credentials if you don't have a connected wallet. 
 
 [![Github Public Repo Link](https://github.com/Akaninyang/genesis-authentic)]
-[![Live Frontend Demo Link](https://)]
-[![Blockchain](wss://genesis-authentic.onrender.com)This can be used to test the chain extrinsics on(https://polkadot.js.org/apps)]
+[![Live Frontend Demo Link](https://genesis-authentic.vercel.app/)]
+[![Blockchain](wss://genesis-authentic.onrender.com)This can be used with(https://polkadot.js.org/apps)]
 [![Demo Video Link](https://)]
 
 ## **Project Overview 🔥**
@@ -62,6 +62,8 @@ Objectives:
 
 
 ## **Setup & Installation**
+Interact with the chain locally at -
+(https://polkadot.js.org/apps/#/explorer?rpc=ws://127.0.0.1:9944)
 
 ```bash
 ## Clone the Repo and Run the Node Locally
@@ -70,11 +72,8 @@ cd ecommerce-node
 cargo build --release
 ./target/release/ecommerce-chain-node --dev
 
-#Build and Interact with the chain locally using
-#(https://polkadot.js.org/apps/#/explorer?rpc=ws://localhost:9944)
-#Alice is set as the sudo account, so use Alice to set admin or transfer funds to your wallet for testing if you wish to interact with the chain from the frontend using a test wallet you own
-
 ## Frontend Setup For Local Dev
 cd genesis-marketplace
 npm install
 npm run dev
+

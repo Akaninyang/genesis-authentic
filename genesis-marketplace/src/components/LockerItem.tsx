@@ -1,5 +1,4 @@
 import type { Product } from '../types.ts'
-//import {products} from '../data/products.ts'
 
 export default function LockerItem({ product, onToggleSale, onRedeem } : { product: Product, onToggleSale: (product: Product, forSale: boolean) => void, onRedeem: (product: Product) => void}) {
   return (

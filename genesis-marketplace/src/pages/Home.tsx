@@ -66,7 +66,7 @@ export default function Home({
     <div>
       {/* --- Hero Section --- */}
       <section
-        className="relative text-center mb-6 py-20 bg-cover bg-center overflow-hidden h-[75vh]"
+        className="relative text-center mb-0 py-20 bg-cover bg-center overflow-hidden h-[75vh]"
         style={{
           backgroundImage:
             "url('https://unsplash.com/photos/BQ9usyzHx_w/download?ixid=M3wxMjA3fDB8MXxzZWFyY2h8M3x8ZWNvbW1lcmNlfGVufDB8fHx8MTc2MjMxMjMyMnww&force=true')",
@@ -88,12 +88,12 @@ export default function Home({
               const el = document.getElementById('products-view');
               if (el) el.scrollIntoView({behavior: "smooth"});
             }} 
-            className="px-8 py-3 btn-fill bg-yellow-500 text-black font-semibold rounded-lg">
+            className="px-5 py-3 btn-fill bg-yellow-500 text-black font-semibold rounded-lg">
               Explore Products
             </button>
 
             <button
-              className={`px-8 py-3 font-semibold rounded-lg transition ${
+              className={`px-5 py-3 font-semibold rounded-lg transition ${
                 connected ? "bg-green-600 hover:bg-green-500" : "bg-blue-500 hover:bg-blue-400"
               } text-white`}
               onClick={onConnectWallet}
@@ -106,7 +106,7 @@ export default function Home({
 
       {/* --- Product Section with Filter Bar --- */}
       <section className="p-6">
-        <div className="flex flex-wrap items-center justify-between mb-6 px-2 sm:px-0">
+        <div className="flex flex-wrap items-center justify-between mb-6 px-1 sm:px-0">
           <h2 className="text-2xl font-semibold">Featured Listings</h2>
           
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 justify-end py-2">

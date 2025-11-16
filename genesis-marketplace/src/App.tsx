@@ -9,25 +9,25 @@ import TransactionModal from './components/TransactionModal.tsx'
 import { products as initialProducts } from './data/products.ts'
 import type { Product } from './types.ts'
 import type { InjectedAccountWithMeta } from "@polkadot/extension-inject/types"
-//import Confetti from "react-confetti"
-//import { useWindowSize } from "react-use"
+import type { KeyringPair } from "@polkadot/keyring/types";
 
+export type AppAccount = 
+  | (InjectedAccountWithMeta & {address: string})
+  | { type: "dev"; pair: KeyringPair; name: string; address: string };
 
 export default function App() {
-  // const { width, height } = useWindowSize()
-  // const [showConfetti, setShowConfetti] = useState(false)
-
   const [route, setRoute] = useState<'home' | 'locker'>('home')
   const [locker, setLocker] = useState<Product[]>([])
   //const [toast, setToast] = useState<string | null>(null)
   const [showWalletModal, setShowWalletModal] = useState(false)
   const [connected, setConnected] = useState(false)
   const [products, setProducts] = useState<Product[]>(initialProducts)
+  //const [account, setAccount] = useState<InjectedAccountWithMeta | null>(null); 
+  
+  const [account, setAccount] = useState<AppAccount | null>(null);
 
-  const [account, setAccount] = useState<InjectedAccountWithMeta | null>(null); 
   const [error, setError] = useState<string | null>(null);
-  const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
-
+  const [accounts, setAccounts] = useState<(InjectedAccountWithMeta)[]>([]);
   const [txModal, setTxModal] = useState({
     show: false,
     status: null as "pending" | "success" | "error" | null,
@@ -58,7 +58,6 @@ useEffect(() => {
         const toNum = (val: any): number => {
           if (!val) return 0;
           try {
-            // Works for BN, BigInt, string, number, or Codec
             if (val.toBigInt) return Number(val.toBigInt());
             if (val.toBn) return val.toBn().toNumber();
             if (typeof val === 'bigint') return Number(val);
@@ -69,10 +68,8 @@ useEffect(() => {
           }
           return 0;
         };
-
           const raw = value.toHuman() as any;
           const existing = initialProducts.find(p => p.id === id);
-
           const updated: Product = {
             id,
             name: raw.name || existing?.name || "Unnamed",
@@ -91,12 +88,12 @@ useEffect(() => {
           updatedProducts.push(updated);
         }
       }
-
       // Update frontend products
       setProducts(updatedProducts);
-
-      // Update locker for the current account
-      setLocker(updatedProducts.filter(p => p.owner === account.address));
+      // Update locker for the current account"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
+      setLocker(
+        updatedProducts.filter(p => p.owner === account?.address)
+      );
 
     } catch (err) {
       console.error("Failed to sync products with chain:", err);
@@ -115,7 +112,7 @@ useEffect(() => {
   connectApi()
 }, [])
 
-  async function handleConnectWallet(selectedAccount: InjectedAccountWithMeta) {
+  async function handleConnectWallet(selectedAccount: AppAccount) {
     setAccount(selectedAccount);
     setShowWalletModal(false);
     setConnected(true);
@@ -131,19 +128,41 @@ useEffect(() => {
         status: "pending",
         message: "Please wait while we process your action...",
       });
+          if ("type" in account && account.type === "dev") {
+      // Bob buys directly with keyring signer
+      const api = await connectApi();
+      const tx = api.tx.marketplace.buyProduct(product.id);
 
-      // Use product.id for extrinsic
+      await new Promise<void>(async (resolve, reject) => {
+        try {
+          const unsub = await tx.signAndSend(account.pair, ({ status, dispatchError }) => {
+            if (dispatchError) {
+              reject(new Error(dispatchError.toString()));
+              unsub();
+              return;
+            }
+            if (status.isFinalized) {
+              console.log("✅ Bob purchase finalized");
+              unsub();
+              resolve();
+            }
+          });
+        } catch (err) {
+          reject(err);
+        }
+      });
+
+    } else {
+      // normal injected account
       await buyProduct(account, product.id);
+    }
 
-      // setShowConfetti(true)
-      // setTimeout(() => setShowConfetti(false), 3000) // stop after 3 seconds
 
       setTxModal({
         show: true,
         status: "success",
         message: "Purchase successful!",
       });
-
       // Add to locker
       setLocker(prev => [product, ...prev]);
       setLocker(prev =>
@@ -157,8 +176,6 @@ useEffect(() => {
           p.id === product.id ? { ...p, onSale: false } : p
         )
       );
-
-
     } catch (err: any) {
       console.error(err);
       setTxModal({
@@ -174,14 +191,12 @@ useEffect(() => {
       setShowWalletModal(true);
       return;
     }
-
     try {
       setTxModal({
         show: true,
         status: "pending",
         message: forSale ? "Please wait while we list your product..." : "Please wait while we unlist your product...",
       });
-      //console.log(forSale ? `📢 Listing product ${product.id}...` : `🚫 Unlisting product ${product.id}...`);
       await toggleSale(account, product.id, forSale);
 
       setTxModal({
@@ -189,8 +204,6 @@ useEffect(() => {
         status: "success",
         message: forSale ? "Congratulations! Product Listing Successful!" : "Product Unlisting Successful!",
       });
-      
-      //console.log("Sale toggled transaction submitted!");
       setLocker(prev =>
         prev.map(p =>
           (p.id === product.id) ? { ...p, onSale: forSale } : p
@@ -201,7 +214,6 @@ useEffect(() => {
           p.id === product.id ? { ...p, onSale: forSale } : p
         )
       );
-      
     } catch (err: any) {
       console.error("Failed to toggle sale:", err);
       setTxModal({
@@ -218,27 +230,23 @@ useEffect(() => {
       return;
     }
     try {
-      //console.log(`Attempting redemption of product with ID: ${product.id}...`);
       setTxModal({
         show: true,
         status: "pending",
         message: "Please wait while we process product redeem...",
       });
-
       await redeemProduct(account, product.id);
-      //console.log("Product redemption request submitted!");
+    
       setTxModal({
         show: true,
         status: "success",
         message: "Redeemed Successfully! Product will be delivered shortly.",
       });
-
       setLocker(prevLocker =>
         prevLocker.map(p =>
           p.id === product.id ? { ...p, isRedeemed: true } : p
         )
       );
-
       setProducts(prev =>
         prev.map(p =>
           p.id === product.id ? { ...p, isRedeemed: true } : p
@@ -253,7 +261,6 @@ useEffect(() => {
       });
     }
   }
-
   return (
     <div className="min-h-screen">
       <div className="container">
@@ -313,75 +320,3 @@ useEffect(() => {
     </div>
   )
 }
-
-//  async function handleBuy(p: Product) {
-  //   if (!account) {
-  //     setToast("⚠ Please connect your wallet first");
-  //     setTimeout(() => setToast(null), 2500);
-  //     return;
-  //   }
-
-  //   try {
-  //     setLocker((prev) => [p, ...prev]);
-  //     setToast( `${p.name} has been added to your vault`);
-  //     setTimeout(() => setToast(null), 2500);
-
-  //     await buyProduct(account, p.id);
-  //     console.log("✅ Buy extrinsic completed for product", p.id);
-  //   } catch (err: any) {
-  //     console.error("❌ Buy extrinsic failed:", err);
-
-  //     // 🧠 Handle specific error messages or fallback
-  //     let message = "Transaction failed. Please try again.";
-  //     if (err?.message?.includes("Invalid Transaction") || err?.toString().includes("InsufficientBalance")) {
-  //       message = "⚠ Insufficient funds to complete this purchase.";
-  //     } else if (err?.message?.includes("Cancelled")) {
-  //       message = "Transaction cancelled.";
-  //     }
-
-  //     setError(message);
-  //   }
-  // }
-
-// import { useState } from 'react';
-// import { connectWallet } from './wallet';
-
-// export default function App() {
-//   const [accounts, setAccounts] = useState<any[]>([]);
-
-//   const handleConnectWallet = async () => {
-//     try {
-//       const accs = await connectWallet();
-//       setAccounts(accs);
-//     } catch (error) {
-//       console.error(error);
-//       // alert(error.message);
-//     }
-//   };
-
-//   return (
-//     <div className="flex flex-col items-center mt-10">
-//       <h1 className="text-2xl font-bold mb-4">Polkadot.js Wallet Connection</h1>
-
-//       <button
-//         onClick={handleConnectWallet}
-//         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-//       >
-//         Connect Wallet
-//       </button>
-
-//       {accounts.length > 0 && (
-//         <div className="mt-6">
-//           <h2 className="text-lg font-semibold">Connected Accounts:</h2>
-//           <ul className="mt-2">
-//             {accounts.map((acc) => (
-//               <li key={acc.address} className="text-gray-700">
-//                 {acc.meta.name || 'Unnamed'} — {acc.address}
-//               </li>
-//             ))}
-//           </ul>
-//         </div>
-//       )}
-//   </div>
-//   );
-// }

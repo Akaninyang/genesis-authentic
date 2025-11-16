@@ -1,6 +1,3 @@
-// src/components/ProductDetail.tsx
-//import React from "react";
-
 type Props = {
   show: boolean;
   onClose: () => void;
@@ -29,7 +26,6 @@ export default function ProductDetail({ show, onClose, loading, product }: Props
           // display the product fields returned by toHuman()
           <div className="space-y-3">
             <div><strong>ID:</strong> {product?.id ?? "—"}</div>
-            {/* Common fields you likely have in Product struct — adjust names to match your toHuman output */}
             <div><strong>Name:</strong> {product?.name ?? "—"}</div>
             <div><strong>Creator:</strong> {product?.genesisOwner ?? product?.genesisOwner?.toString() ?? "—"}</div>
             <div><strong>Current Owner:</strong> {product?.owner ?? product?.owner?.toString() ?? "—"}</div>

@@ -1,10 +1,11 @@
 // polkadotApi.ts
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { web3FromAddress } from "@polkadot/extension-dapp";
-import type { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
+//import type { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import type { Product } from "./types.ts";
+import type { AppAccount } from "./App.tsx";
 //import type { Option } from "@polkadot/types-codec";
-//import type { ISubmittableResult } from "@polkadot/types/types";
+import type { ISubmittableResult } from "@polkadot/types/types";
 
 let api: ApiPromise | null = null;
 
@@ -19,15 +20,166 @@ export async function connectApi(): Promise<ApiPromise> {
   return api;
 }
 
-export async function buyProduct(account: InjectedAccountWithMeta, productId: number): Promise<void> {
+// export async function buyProduct(account: AppAccount, productId: number): Promise<void> {
+//   const api = await connectApi();
+
+//   // Check if this is Bob / dev account
+//   if ("type" in account && account.type === "dev") {
+//     const tx = api.tx.marketplace.buyProduct(productId);
+//     return new Promise<void>((resolve, reject) => {
+//       tx.signAndSend(account.pair, ({ status, events, dispatchError }) => {
+//         if (dispatchError) {
+//           if (dispatchError.isModule) {
+//             const decoded = api.registry.findMetaError(dispatchError.asModule);
+//             const { docs, name, section } = decoded;
+//             reject(new Error(`${section}.${name}: ${docs.join(" ")}`));
+//           } else {
+//             reject(new Error(dispatchError.toString()));
+//           }
+//           return;
+//         }
+
+//         if (status.isInBlock) console.log("📦 Included in block (Bob)");
+//         if (status.isFinalized) {
+//           console.log("✅ Finalized (Bob)");
+//           events.forEach(({ event: { section, method, data } }) => {
+//             if (section === "marketplace" && method === "ProductPurchased") {
+//               console.log("🎉 Product purchased by Bob!", data.toHuman());
+//             }
+//           });
+//           resolve();
+//         }
+//       }).catch(reject);
+//     });
+//   }
+
+//   // Otherwise, assume injected account
+//   const injector = await web3FromAddress(account.address);
+//   const tx = api.tx.marketplace.buyProduct(productId);
+
+//   return new Promise<void>(async (resolve, reject) => {
+//     try {
+//       const unsub = await tx.signAndSend(
+//         account.address,
+//         { signer: injector.signer },
+//         ({ status, events, dispatchError }) => {
+//           if (dispatchError) {
+//             if (dispatchError.isModule) {
+//               const decoded = api.registry.findMetaError(dispatchError.asModule);
+//               const { docs, name, section } = decoded;
+//               reject(new Error(`${section}.${name}: ${docs.join(" ")}`));
+//             } else {
+//               reject(new Error(dispatchError.toString()));
+//             }
+//             unsub();
+//             return;
+//           }
+
+//           if (status.isInBlock) console.log("📦 Included in block");
+//           if (status.isFinalized) {
+//             console.log("✅ Finalized");
+//             events.forEach(({ event: { section, method, data } }) => {
+//               if (section === "marketplace" && method === "ProductPurchased") {
+//                 console.log("🎉 Product purchased!", data.toHuman());
+//               }
+//             });
+//             unsub();
+//             resolve();
+//           }
+//         }
+//       );
+//     } catch (err) {
+//       reject(err);
+//    }
+//   });
+// }
+
+export async function buyProduct(account: AppAccount, productId: number): Promise<void> {
   const api = await connectApi();
-  const injector = await web3FromAddress(account.address);
   const tx = api.tx.marketplace.buyProduct(productId);
+
+  return new Promise<void>((resolve, reject) => {
+    const handler = (result: ISubmittableResult) => {
+      const { status, events, dispatchError } = result;
+
+      if (dispatchError) {
+        let message = "";
+
+        if (dispatchError.isModule) {
+          const decoded = api.registry.findMetaError(dispatchError.asModule);
+          const { section, name, docs } = decoded;
+          message = `${section}.${name}: ${docs.join(" ")}`;
+        } else {
+          message = dispatchError.toString();
+        }
+
+        reject(new Error(message));
+        return;
+      }
+
+      if (status.isFinalized) {
+        events.forEach(({ event }) => {
+          const { section, method, data } = event;
+          if (section === "marketplace" && method === "ProductPurchased") {
+            console.log("🎉 Product purchased!", data.toHuman());
+          }
+        });
+        resolve();
+      }
+    };
+
+    try {
+      if ('type' in account && account.type === 'dev') {
+        // Bob / dev account
+        tx.signAndSend(account.pair, handler).catch(reject);
+      } else {
+        // Injected account
+        web3FromAddress(account.address)
+          .then((injector) => {
+            tx.signAndSend(account.address, { signer: injector.signer }, handler).catch(reject);
+          })
+          .catch(reject);
+      }
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+// Toggle Sale
+export async function toggleSale(account: AppAccount, productId: number, forSale: boolean): Promise<void> {
+  const api = await connectApi();
+
+  if ("type" in account && account.type === "dev") {
+    const tx = api.tx.marketplace.toggleSale(productId, forSale);
+    return new Promise<void>((resolve, reject) => {
+      tx.signAndSend(account.pair, ({ status, dispatchError }) => {
+        if (dispatchError) {
+          if (dispatchError.isModule) {
+            const decoded = api.registry.findMetaError(dispatchError.asModule);
+            const { docs, name, section } = decoded;
+            reject(new Error(`${section}.${name}: ${docs.join(" ")}`));
+          } else {
+            reject(new Error(dispatchError.toString()));
+          }
+          return;
+        }
+
+        if (status.isInBlock) console.log("📦 Included in block (Bob)");
+        if (status.isFinalized) {
+          console.log("✅ Finalized (Bob)");
+          resolve();
+        }
+      }).catch(reject);
+    });
+  }
+
+  // Otherwise, injected account
+  const injector = await web3FromAddress(account.address);
+  const tx = api.tx.marketplace.toggleSale(productId, forSale);
 
   return new Promise<void>(async (resolve, reject) => {
     try {
-      const unsub = await tx.signAndSend(account.address, { signer: injector.signer }, ({ status, events, dispatchError }) => {
-        // Dispatch error handling
+      const unsub = await tx.signAndSend(account.address, { signer: injector.signer }, ({ status, dispatchError }) => {
         if (dispatchError) {
           if (dispatchError.isModule) {
             const decoded = api.registry.findMetaError(dispatchError.asModule);
@@ -43,30 +195,50 @@ export async function buyProduct(account: InjectedAccountWithMeta, productId: nu
         if (status.isInBlock) console.log("📦 Included in block");
         if (status.isFinalized) {
           console.log("✅ Finalized");
-          events.forEach(({ event: { section, method, data } }) => {
-            if (section === "marketplace" && method === "ProductPurchased") {
-              console.log("🎉 Product purchased!", data.toHuman());
-            }
-          });
-          unsub();
           resolve();
         }
       });
     } catch (err) {
-      // Immediate errors like insufficient balance are caught here
       reject(err);
     }
   });
 }
 
-export async function redeemProduct(account: InjectedAccountWithMeta, productId: number): Promise<void> {
+// Redeem Product
+export async function redeemProduct(account: AppAccount, productId: number): Promise<void> {
   const api = await connectApi();
+
+  if ("type" in account && account.type === "dev") {
+    const tx = api.tx.marketplace.redeemProduct(productId);
+    return new Promise<void>((resolve, reject) => {
+      tx.signAndSend(account.pair, ({ status, dispatchError }) => {
+        if (dispatchError) {
+          if (dispatchError.isModule) {
+            const decoded = api.registry.findMetaError(dispatchError.asModule);
+            const { docs, name, section } = decoded;
+            reject(new Error(`${section}.${name}: ${docs.join(" ")}`));
+          } else {
+            reject(new Error(dispatchError.toString()));
+          }
+          return;
+        }
+
+        if (status.isInBlock) console.log("📦 Included in block (Bob)");
+        if (status.isFinalized) {
+          console.log("✅ Finalized (Bob)");
+          resolve();
+        }
+      }).catch(reject);
+    });
+  }
+
+  // Otherwise, injected account
   const injector = await web3FromAddress(account.address);
   const tx = api.tx.marketplace.redeemProduct(productId);
 
   return new Promise<void>(async (resolve, reject) => {
     try {
-      const unsub = await tx.signAndSend(account.address, { signer: injector.signer }, ({ status, events, dispatchError }) => {
+      const unsub = await tx.signAndSend(account.address, { signer: injector.signer }, ({ status, dispatchError }) => {
         if (dispatchError) {
           if (dispatchError.isModule) {
             const decoded = api.registry.findMetaError(dispatchError.asModule);
@@ -79,14 +251,9 @@ export async function redeemProduct(account: InjectedAccountWithMeta, productId:
           return;
         }
 
+        if (status.isInBlock) console.log("📦 Included in block");
         if (status.isFinalized) {
-          console.log("✅ Product redeemed!");
-          events.forEach(({ event: { section, method, data } }) => {
-            if (section === "marketplace" && method === "ProductRedeemed") {
-              console.log("🎊 Event:", data.toHuman());
-            }
-          });
-          unsub();
+          console.log("✅ Finalized");
           resolve();
         }
       });
@@ -95,43 +262,79 @@ export async function redeemProduct(account: InjectedAccountWithMeta, productId:
     }
   });
 }
+// export async function redeemProduct(account: InjectedAccountWithMeta, productId: number): Promise<void> {
+//   const api = await connectApi();
+//   const injector = await web3FromAddress(account.address);
+//   const tx = api.tx.marketplace.redeemProduct(productId);
 
-export async function toggleSale(account: InjectedAccountWithMeta, productId: number, forSale: boolean): Promise<void> {
-  const api = await connectApi();
-  const injector = await web3FromAddress(account.address);
-  const tx = api.tx.marketplace.toggleSale(productId, forSale);
+//   return new Promise<void>(async (resolve, reject) => {
+//     try {
+//       const unsub = await tx.signAndSend(account.address, { signer: injector.signer }, ({ status, events, dispatchError }) => {
+//         if (dispatchError) {
+//           if (dispatchError.isModule) {
+//             const decoded = api.registry.findMetaError(dispatchError.asModule);
+//             const { docs, name, section } = decoded;
+//             reject(new Error(`${section}.${name}: ${docs.join(" ")}`));
+//           } else {
+//             reject(new Error(dispatchError.toString()));
+//           }
+//           unsub();
+//           return;
+//         }
 
-  return new Promise<void>(async (resolve, reject) => {
-    try {
-      const unsub = await tx.signAndSend(account.address, { signer: injector.signer }, ({ status, events, dispatchError }) => {
-        if (dispatchError) {
-          if (dispatchError.isModule) {
-            const decoded = api.registry.findMetaError(dispatchError.asModule);
-            const { docs, name, section } = decoded;
-            reject(new Error(`${section}.${name}: ${docs.join(" ")}`));
-          } else {
-            reject(new Error(dispatchError.toString()));
-          }
-          unsub();
-          return;
-        }
+//         if (status.isFinalized) {
+//           console.log("✅ Product redeemed!");
+//           events.forEach(({ event: { section, method, data } }) => {
+//             if (section === "marketplace" && method === "ProductRedeemed") {
+//               console.log("🎊 Event:", data.toHuman());
+//             }
+//           });
+//           unsub();
+//           resolve();
+//         }
+//       });
+//     } catch (err) {
+//       reject(err);
+//     }
+//   });
+// }
 
-        if (status.isFinalized) {
-          console.log("✅ Sale toggled!");
-          events.forEach(({ event: { section, method, data } }) => {
-            if (section === "marketplace" && method === "SaleToggled") {
-              console.log("⚙ Event:", data.toHuman());
-            }
-          });
-          unsub();
-          resolve();
-        }
-      });
-    } catch (err) {
-      reject(err);
-    }
-  });
-}
+// export async function toggleSale(account: InjectedAccountWithMeta, productId: number, forSale: boolean): Promise<void> {
+//   const api = await connectApi();
+//   const injector = await web3FromAddress(account.address);
+//   const tx = api.tx.marketplace.toggleSale(productId, forSale);
+
+//   return new Promise<void>(async (resolve, reject) => {
+//     try {
+//       const unsub = await tx.signAndSend(account.address, { signer: injector.signer }, ({ status, events, dispatchError }) => {
+//         if (dispatchError) {
+//           if (dispatchError.isModule) {
+//             const decoded = api.registry.findMetaError(dispatchError.asModule);
+//             const { docs, name, section } = decoded;
+//             reject(new Error(`${section}.${name}: ${docs.join(" ")}`));
+//           } else {
+//             reject(new Error(dispatchError.toString()));
+//           }
+//           unsub();
+//           return;
+//         }
+
+//         if (status.isFinalized) {
+//           console.log("✅ Sale toggled!");
+//           events.forEach(({ event: { section, method, data } }) => {
+//             if (section === "marketplace" && method === "SaleToggled") {
+//               console.log("⚙ Event:", data.toHuman());
+//             }
+//           });
+//           unsub();
+//           resolve();
+//         }
+//       });
+//     } catch (err) {
+//       reject(err);
+//     }
+//   });
+// }
 
 export async function getProduct(productId: number): Promise<any | null> {
   const api = await connectApi();
@@ -175,36 +378,3 @@ export async function getAllProducts(): Promise<Product[]> {
 
   return results;
 }
-// export async function fetchAllProducts(existingProducts: Product[]): Promise<Product[]> {
-//   const api = await connectApi();
-//   const keys = await api.query.marketplace.products.keys();
-//   const updatedProducts: Product[] = [];
-
-//   for (const key of keys) {
-//     const id = key.args[0].toPrimitive() as number;
-//     const value = await api.query.marketplace.products(id);
-//     if (!value.isEmpty) {
-//       const raw = value.toHuman() as any;
-//       // Try to find a matching local product by ID
-//       const existing = existingProducts.find(p => p.id === id);
-//       // Merge chain data into the local frontend structure ?? existing?.onSale ?? false
-//       const updated: Product = {
-//         id,
-//         name: raw.name || existing?.name || "Unnamed",
-//         manufacturer: raw.genesis_owner || existing?.manufacturer || "Unknown",
-//         image: existing?.image || "/placeholder.png", // ✅ Keep existing image
-//         price: raw.price ? String(raw.price) : existing?.price || "0",
-//         pastOwners: Number(raw.holders_count ?? existing?.pastOwners ?? 0),
-//         description: existing?.description || "",
-//         purchased: existing?.purchased ?? false,
-//         onSale: Boolean(raw.on_sale ?? existing?.onSale ?? false),
-//         isRedeemed: Boolean(raw.is_redeemed ?? existing?.isRedeemed ?? false),
-//         owner: String(raw.owner),
-//       };
-
-//       updatedProducts.push(updated);
-//     }
-//   }
-
-//   return updatedProducts;
-// }
