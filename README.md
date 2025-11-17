@@ -6,7 +6,7 @@ This repo contains the folders for an *E-commerce Marketplace* standalone blockc
 - [![Github Public Repo Link](https://github.com/Akaninyang/genesis-authentic)]
 - [![Live Frontend Demo Link](https://genesis-authentic.vercel.app/)]
 - [![Node Web Socket](wss://genesis-authentic.onrender.com)This can be used with(https://polkadot.js.org/apps)]
-- [![Demo Video Link](https://)]
+- [![Demo Video Link](https://youtu.be/paA-YiojErM?feature=shared)]
 
 ## **Project Overview 🔥**
 

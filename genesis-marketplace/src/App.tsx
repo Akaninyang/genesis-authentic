@@ -6,6 +6,7 @@ import Locker from './pages/Locker.tsx'
 import Header from './components/Header.tsx'
 import WalletModal from './components/WalletModal.tsx'
 import TransactionModal from './components/TransactionModal.tsx'
+import DeliveryModal from './components/DeliveryModal.tsx'
 import { products as initialProducts } from './data/products.ts'
 import type { Product } from './types.ts'
 import type { InjectedAccountWithMeta } from "@polkadot/extension-inject/types"
@@ -28,6 +29,7 @@ export default function App() {
 
   const [error, setError] = useState<string | null>(null);
   const [accounts, setAccounts] = useState<(InjectedAccountWithMeta)[]>([]);
+  const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [txModal, setTxModal] = useState({
     show: false,
     status: null as "pending" | "success" | "error" | null,
@@ -230,6 +232,7 @@ useEffect(() => {
       return;
     }
     try {
+      setShowDeliveryModal(true);
       setTxModal({
         show: true,
         status: "pending",
@@ -315,7 +318,13 @@ useEffect(() => {
       status={txModal.status}
       message={txModal.message}
       onClose={() => setTxModal({ show: false, status: null, message: "" })}
-    />}
+      />}
+
+      {showDeliveryModal && <DeliveryModal
+      open={showDeliveryModal}
+      onClose={() => setShowDeliveryModal(false)}
+      />}
+
 
     </div>
   )

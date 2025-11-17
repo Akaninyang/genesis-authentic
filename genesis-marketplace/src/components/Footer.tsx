@@ -3,7 +3,7 @@ export default function Footer() {
     <footer className="bg-[#0f0f11] border-t border-white/5 text-gray-400 py-8 mt-16">
       <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
         <p className="text-sm text-gray-500">
-          © {new Date().getFullYear()} <span className="text-yellow-400 font-semibold">LuxChain</span>. All rights reserved.
+          © {new Date().getFullYear()} <span className="text-yellow-400 font-semibold">Genesis Marketplace</span>. All rights reserved.
         </p>
 
         <div className="flex items-center gap-6 text-sm">

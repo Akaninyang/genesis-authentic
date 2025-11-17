@@ -26,7 +26,7 @@ export default function TransactionModal({ show, status, message, onClose }: Tra
           {status === "pending" && (
             <button
               className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md"
-              onClick={onClose} // Dismiss modal and continue browsing
+              onClick={onClose} 
             >
               Continue
             </button>
